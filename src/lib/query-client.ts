@@ -5,6 +5,7 @@ const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('authToken')
+        // @ts-expect-error queryKey problem will check
         const response = await fetch(queryKey[0], {
           headers: {
             Authorization: `Bearer ${token}`,

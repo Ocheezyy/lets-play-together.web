@@ -21,10 +21,10 @@ const mockGames = [
 ]
 
 export default function App() {
-  const { token, isLoggedIn, gamesOwned, clearAuth, userInfo, friends } = useMainStore();
+  const { token, isLoggedIn, clearAuth, userInfo, friends } = useMainStore();
 
   useSteamUser(token);
-  const { refetch: refetchFriends, isLoading: friendsLoading } = useSteamFriends(token);
+  const { refetch: refetchFriends } = useSteamFriends(token);
 
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("friends");
