@@ -18,10 +18,6 @@ const mockGames = [
   { id: 2, title: "Dota 2", image: "/placeholder.svg?height=200&width=460", players: [1, 3, 5, 7] },
   { id: 3, title: "Team Fortress 2", image: "/placeholder.svg?height=200&width=460", players: [2, 4, 6, 8] },
   { id: 4, title: "Portal 2", image: "/placeholder.svg?height=200&width=460", players: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 5, title: "Left 4 Dead 2", image: "/placeholder.svg?height=200&width=460", players: [1, 2, 4, 6] },
-  { id: 6, title: "Half-Life 2", image: "/placeholder.svg?height=200&width=460", players: [3, 5, 7] },
-  { id: 7, title: "Garry's Mod", image: "/placeholder.svg?height=200&width=460", players: [1, 2, 3, 4] },
-  { id: 8, title: "Rust", image: "/placeholder.svg?height=200&width=460", players: [1, 4, 8] },
 ]
 
 export default function App() {
