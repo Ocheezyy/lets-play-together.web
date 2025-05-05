@@ -11,6 +11,7 @@ import { useMainStore } from '@/stores/main'
 import {useSteamUser} from "@/hooks/useSteamUser.ts";
 import {useSteamFriends} from "@/hooks/useSteamFriends.ts";
 import { Input } from "@/components/ui/input"
+import {useGetFriendsGames} from "@/hooks/useGetFriendsGames.ts";
 
 
 const mockGames = [
@@ -22,6 +23,7 @@ const mockGames = [
 
 export default function App() {
   const { token, isLoggedIn, clearAuth, userInfo, friends } = useMainStore();
+  const { mutate: mutateGetFriendsGames } = useGetFriendsGames();
 
   useSteamUser(token);
   const { refetch: refetchFriends } = useSteamFriends(token);
@@ -38,6 +40,10 @@ export default function App() {
 
   const toggleFriendSelection = (friendId: string) => {
     setSelectedFriends((prev) => (prev.includes(friendId) ? prev.filter((id) => id !== friendId) : [...prev, friendId]))
+  }
+
+  const getFriendsGames = () => {
+    mutateGetFriendsGames({ token: token, steam_ids: selectedFriends });
   }
 
   const getCommonGames = () => {
@@ -171,7 +177,10 @@ export default function App() {
 
               {selectedFriends.length > 0 && (
                 <div className="flex justify-end">
-                  <Button onClick={() => setActiveTab("games")}>
+                  <Button onClick={() => {
+                    getFriendsGames();
+                    setActiveTab("games");
+                  }}>
                     View Common Games ({commonGames.length})
                   </Button>
                 </div>
