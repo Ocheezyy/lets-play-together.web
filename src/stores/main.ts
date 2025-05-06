@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import {Game} from "@/lib/types.ts";
 
 
 type UserInfo = {
@@ -16,23 +17,19 @@ type Friend = {
   steam_avatar: string;
 }
 
-type Game = {
-  id: string
-  name: string
-  // add more fields as needed
-}
-
 type MainStore = {
   token: string | null
   isLoggedIn: boolean
-  gamesOwned: Game[]
+  gamesOwned: Record<number, Game>
   userInfo: UserInfo | null
   friends: Friend[]
+  commonGames: Game[]
   setToken: (token: string) => void
   clearAuth: () => void
-  setGamesOwned: (games: Game[]) => void
+  setGamesOwned: (games: Record<number, Game>) => void
   setUserInfo: (userInfo: UserInfo) => void
   setFriends: (friends: Friend[]) => void
+  setCommonGames: (games: Game[]) => void
 }
 
 export const useMainStore = create<MainStore>()(
@@ -40,8 +37,9 @@ export const useMainStore = create<MainStore>()(
     (set) => ({
       token: null,
       isLoggedIn: false,
-      gamesOwned: [],
+      gamesOwned: {},
       userInfo: null,
+      commonGames: [],
       friends: [],
       setToken: (token) =>
         set(() => ({
@@ -52,7 +50,7 @@ export const useMainStore = create<MainStore>()(
         set(() => ({
           token: null,
           isLoggedIn: false,
-          gamesOwned: [],
+          gamesOwned: {},
           userInfo: null,
         })),
       setGamesOwned: (games) =>
@@ -66,6 +64,10 @@ export const useMainStore = create<MainStore>()(
       setFriends: (friends: Friend[]) =>
         set(() => ({
           friends: friends,
+        })),
+      setCommonGames: (games) =>
+        set(() => ({
+          commonGames: games,
         }))
     }),
     {

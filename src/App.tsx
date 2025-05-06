@@ -5,32 +5,27 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {LogIn, Users, GamepadIcon, X, Search} from "lucide-react"
+import {LogIn, Users, GamepadIcon, X, Search, User, Clock} from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useMainStore } from '@/stores/main'
 import {useSteamUser} from "@/hooks/useSteamUser.ts";
 import {useSteamFriends} from "@/hooks/useSteamFriends.ts";
 import { Input } from "@/components/ui/input"
 import {useGetFriendsGames} from "@/hooks/useGetFriendsGames.ts";
-
-
-const mockGames = [
-  { id: 1, title: "Counter-Strike 2", image: "/placeholder.svg?height=200&width=460", players: [1, 2, 4, 6, 8] },
-  { id: 2, title: "Dota 2", image: "/placeholder.svg?height=200&width=460", players: [1, 3, 5, 7] },
-  { id: 3, title: "Team Fortress 2", image: "/placeholder.svg?height=200&width=460", players: [2, 4, 6, 8] },
-  { id: 4, title: "Portal 2", image: "/placeholder.svg?height=200&width=460", players: [1, 2, 3, 4, 5, 6, 7, 8] },
-]
+import {useGetOwnedGames} from "@/hooks/useGetOwnedGames.ts";
 
 export default function App() {
-  const { token, isLoggedIn, clearAuth, userInfo, friends } = useMainStore();
+  const { token, isLoggedIn, clearAuth, userInfo, friends, commonGames, gamesOwned } = useMainStore();
   const { mutate: mutateGetFriendsGames } = useGetFriendsGames();
 
   useSteamUser(token);
+  useGetOwnedGames(token);
   const { refetch: refetchFriends } = useSteamFriends(token);
 
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("friends");
   const [searchQuery, setSearchQuery] = useState("");
+  const [gameView, setGameView] = useState<"grid" | "list">("grid");
 
   const filteredFriends = friends.filter((friend) => friend.steam_username.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -45,14 +40,6 @@ export default function App() {
   const getFriendsGames = () => {
     mutateGetFriendsGames({ token: token, steam_ids: selectedFriends });
   }
-
-  const getCommonGames = () => {
-    if (selectedFriends.length === 0) return []
-
-    return mockGames.filter((game) => selectedFriends.every((friendId) => game.players.includes(Number(friendId))))
-  }
-
-  const commonGames = getCommonGames()
 
   if (!isLoggedIn) {
     return (
@@ -188,61 +175,90 @@ export default function App() {
             </TabsContent>
 
             <TabsContent value="games" className="space-y-4">
-              <Card className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+              <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">
-                    {selectedFriends.length > 0
-                      ? `Games you can play with ${selectedFriends.length} selected friend${
-                        selectedFriends.length > 1 ? "s" : ""
-                      }`
-                      : "Select friends to see common games"}
-                  </h2>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      {selectedFriends.length > 0
+                        ? `Games you can play with ${selectedFriends.length} selected friend${selectedFriends.length > 1 ? "s" : ""}`
+                        : "Select friends to see common games"}
+                    </h2>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={gameView === "grid" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setGameView("grid")}
+                        className="px-3"
+                      >
+                        Grid
+                      </Button>
+                      <Button
+                        variant={gameView === "list" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setGameView("list")}
+                        className="px-3"
+                      >
+                        List
+                      </Button>
+                    </div>
+                  </div>
 
                   {selectedFriends.length === 0 ? (
-                    <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                    <div className="text-center py-8 text-gray-400">
                       <GamepadIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
                       <p>Select friends to see what games you can play together</p>
-                      <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => setActiveTab("friends")}
-                      >
+                      <Button variant="outline" className="mt-4" onClick={() => setActiveTab("friends")}>
                         Select Friends
                       </Button>
                     </div>
                   ) : commonGames.length === 0 ? (
-                    <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                    <div className="text-center py-8 text-gray-400">
                       <GamepadIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
                       <p>No common games found with selected friends</p>
-                      <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => setActiveTab("friends")}
-                      >
+                      <Button variant="outline" className="mt-4" onClick={() => setActiveTab("friends")}>
                         Select Different Friends
                       </Button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  ) : gameView === "grid" ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {commonGames.map((game) => (
-                        <Card
-                          key={game.id}
-                          className="overflow-hidden bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                        <div
+                          key={game.appid}
+                          className="flex flex-col items-center text-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
                         >
-                          <div className="aspect-video relative">
-                            <img
-                              src={game.image || "/placeholder.svg"}
-                              alt={game.title}
-                              className="object-cover w-full h-full"
-                            />
+                          <img
+                            src={game.img_icon_url ? `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg` : "/placeholder.svg"}
+                            alt={game.name}
+                            className="w-16 h-16 rounded-md mb-2"
+                          />
+                          <h3 className="font-medium text-sm">{game.name}</h3>
+                          <p className="text-xs text-gray-400 mt-1">{selectedFriends.length} friends</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {commonGames.map((game) => (
+                        <div
+                          key={game.appid}
+                          className="flex items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                          <img
+                            src={game.img_icon_url ? `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg` : "/placeholder.svg"}
+                            alt={game.name}
+                            className="w-12 h-12 rounded-md mr-3"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-medium">{game.name}</h3>
+                            <div className="flex items-center text-xs text-gray-400 mt-1">
+                              <User className="h-3 w-3 mr-1" />
+                              <span className="mr-3">{selectedFriends.length} friends</span>
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span>{(gamesOwned[game.appid]?.playtime_forever / 60).toFixed(0)} Hours</span>
+                            </div>
                           </div>
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold">{game.title}</h3>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {game.players.length} friends own this game
-                            </p>
-                          </CardContent>
-                        </Card>
+                          <div className="text-xs text-gray-400">You have {(gamesOwned[game.appid]?.playtime_2weeks / 60).toFixed(0)} Hours in the last 2 weeks</div>
+                        </div>
                       ))}
                     </div>
                   )}

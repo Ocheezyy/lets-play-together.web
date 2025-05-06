@@ -1,24 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios'
+import {GetFriendsGamesResponse} from "@/lib/types.ts";
+import {findGamesInCommon} from "@/lib/utils.ts";
+import { useMainStore } from "@/stores/main.ts";
 
 export type GetFriendsGamesInput = {
   token: string | null;
   steam_ids: string[];
 };
 
-export type Game = {
-  appid: string;
-  name: string;
-  playtime_forever: number; // minutes
-  playtime_2weeks: number; //minutes
-  img_icon_url: string;
-};
-
-export type GetFriendsGamesResponse = {
-  games: Record<string, Game[]>;
-};
 
 export function useGetFriendsGames() {
+  const { setCommonGames } = useMainStore();
+
   return useMutation<GetFriendsGamesResponse, Error, GetFriendsGamesInput>({
     mutationFn: async (input: GetFriendsGamesInput) => {
       const res =  await axios.post(
@@ -36,7 +30,9 @@ export function useGetFriendsGames() {
       return res.data;
     },
     onSuccess: async (data: GetFriendsGamesResponse) => {
-      console.log(data);
+      const gamesInCommon = await findGamesInCommon(data);
+      setCommonGames(gamesInCommon);
+      console.log(gamesInCommon);
     },
     onError: async (error: Error) => {
       console.error(error);
